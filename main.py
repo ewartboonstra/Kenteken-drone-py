@@ -1,4 +1,5 @@
 from PIL import Image
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -28,12 +29,26 @@ def find_rectangle(img, thresh):
         cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
 
     # 7
-        if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):
-            #if #de lengte van de zijkant groter is dan de langte van de onderkant
-            recs.append(cnt)
-            #print 'cnt: '
-            #print cv2.magnitude(cnt[0], cnt[1]) #TODO: find out if the rectangle is more braod then it is tal
-            #print '\n\r'
+        if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt) and cv2.isContourConvex(cnt):
+            #cnt[0][0][0] x of point 1
+            #cnt[0][0][1] y of point 1
+            #cnt[1][0][0] x of point 2
+            #cnt[1][0][1] y of point 2
+            #cnt[2][0][0] x of point 3
+            #cnt[2][0][1] y of point 3
+            #cnt[3][0][0] x of point 4
+            #cnt[3][0][1] y of point 4
+            #points go counterclockwise starting with the top left one
+            dif1x = cnt[0][0][0] - cnt[1][0][0]
+            dif1y = cnt[0][0][1] - cnt[1][0][1]
+            dif2x = cnt[0][0][0] - cnt[3][0][0]
+            dif2y = cnt[0][0][1] - cnt[3][0][1]
+            len1 = math.sqrt(math.pow(dif1x, 2) + math.pow(dif1y, 2))
+            len2 = math.sqrt(math.pow(dif2x, 2) + math.pow(dif2y, 2))
+            if len1 < len2:
+                print len1
+                print len2
+                recs.append(cnt)
 
     return src, dst, conts, recs
 
