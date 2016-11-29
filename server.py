@@ -44,12 +44,3 @@ class Server:
         b64 = self.convertToBase64(img)
         self.socket.send_string(b64)
         print "Image sent"
-
-
-s = Server()
-s.openConnection()
-img = cv2.imread('img/kenteken-apart.png')
-
-s.sendImg(img)
-s.closeConnection()
-
