@@ -4,6 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
+def distance_between_points(p1, p2):
+    #c^2 = (xA - xB)^2 + (yA - yB)^2
+    #c = root((xA - xB)^2 + (yA - yB)^2)
+    return abs(math.sqrt(math.pow((p1[0] - p2[0]), 2) + math.pow((p1[1] - p2[1]), 2)))
+
+def ratio(line1, line2):
+    return line2 / line1
+
 def find_rectangle(img, thresh):
     # 1
     src = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
@@ -20,14 +28,13 @@ def find_rectangle(img, thresh):
     edges = cv2.Canny(dst, 0, 75, apertureSize=5)
 
     # 5
-    dst, conts, hierarchy = cv2.findContours(dst, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
+    dst, conts, hierarchy = cv2.findContours(dst, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # 6
     recs = []
+    current_index = 0
     for cnt in conts:
         cnt_len = cv2.arcLength(cnt, True)
         cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
-
     # 7
         if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt) and cv2.isContourConvex(cnt):
             #cnt[0][0][0] x of point 1
@@ -39,18 +46,27 @@ def find_rectangle(img, thresh):
             #cnt[3][0][0] x of point 4
             #cnt[3][0][1] y of point 4
             #points go counterclockwise starting with the top left one
-            dif1x = cnt[0][0][0] - cnt[1][0][0]
-            dif1y = cnt[0][0][1] - cnt[1][0][1]
-            dif2x = cnt[0][0][0] - cnt[3][0][0]
-            dif2y = cnt[0][0][1] - cnt[3][0][1]
-            len1 = math.sqrt(math.pow(dif1x, 2) + math.pow(dif1y, 2))
-            len2 = math.sqrt(math.pow(dif2x, 2) + math.pow(dif2y, 2))
-            if len1 < len2:
-                print len1
-                print len2
-                recs.append(cnt)
-
-    return src, dst, conts, recs
+            #1 is left
+            #2 is bottom
+            #3 is right
+            #4 is top
+            len1 = distance_between_points(cnt[0][0],cnt[1][0])
+            len2 = distance_between_points(cnt[1][0],cnt[2][0])
+            len3 = distance_between_points(cnt[2][0],cnt[3][0])
+            len4 = distance_between_points(cnt[3][0],cnt[1][0])
+            #check if ratio is licence plate like
+            if (ratio(len1, len2) > 3.0 and ratio(len1, len2) < 8.0) and (ratio(len3, len4) > 3.0 and ratio(len3, len4) < 8.0):
+                j = 0
+                for hier in hierarchy[0]:
+                    #check if rectangle has other shapes inside it (posibly letters)
+                    if hier[3] == current_index:
+                        #removing potential noice
+                        if cv2.contourArea(conts[j]) > 1000:
+                            print 'found plate-like'
+                            recs.append(cnt)
+                    j = j + 1
+        current_index = current_index + 1
+    return recs
 
     '''
     Stappenplan herkennen rechthoek
@@ -65,16 +81,20 @@ def find_rectangle(img, thresh):
 
 def show_img():
     from glob import glob
-    for fn in glob('/home/vincent/Documents/wh/jaar 3/drone/img/*.png'):
-        for x in xrange(0, 255, 15):
-            src, dst, conts, recs = find_rectangle(fn, x)
-            img = cv2.imread(fn, cv2.IMREAD_COLOR)
-            cv2.drawContours(img, recs, -1, (255, 0, 255), 1 )
-            cv2.imshow('squares', img)
-            ch = 0xFF & cv2.waitKey()
-            if ch == 27:
-                break
-        cv2.destroyWindow('squares')
+    for fn in glob('/home/vincent/Documents/wh/jaar 3/deze drone is wel goed/img/*.JPG'):
+        plates = []
+        for x in xrange(15, 240, 15):
+            plates.append(find_rectangle(fn, x))
+        img = cv2.imread(fn, cv2.IMREAD_COLOR)
+        print plates
+        for plate in plates:
+            cv2.drawContours(img, plate, -1, (255, 0, 255), 6 )
+        cv2.namedWindow('squares', cv2.WINDOW_NORMAL)
+        cv2.imshow('squares', img)
+        ch = 0xFF & cv2.waitKey()
+        if ch == 27:
+            break
+    cv2.destroyWindow('squares')
 
 if __name__ == '__main__':
     show_img()
