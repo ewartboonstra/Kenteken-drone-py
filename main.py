@@ -3,6 +3,8 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+from plate_detector import plate_detector
+import time
 
 def distance_between_points(p1, p2):
     #c^2 = (xA - xB)^2 + (yA - yB)^2
@@ -69,13 +71,13 @@ def find_potential_plate(squares, hierarchy, conts):
     recs = []
     for square in squares:
         j = 0
-        print square[1]
         for hier in hierarchy[0]:
         #check if rectangle has other shapes inside it (posibly letters)
             if hier[3] == square[0]:
                 #removing potential noice
                 if cv2.contourArea(conts[j]) > 1000:
                     recs.append(square[1])
+                    break
             j = j + 1
     return recs
 
@@ -100,19 +102,28 @@ def find_rectangle(img, thresh):
     '''
 
 def show_img():
+    pd = plate_detector()
     from glob import glob
     for fn in glob('/home/vincent/Documents/wh/jaar 3/deze drone is wel goed/img/*.JPG'):
+
         plates = []
+        '''start = time.time()
         for x in xrange(15, 240, 15):
+
             plates.append(find_rectangle(fn, x))
+        end = time.time()
+        print end - start'''
         img = cv2.imread(fn, cv2.IMREAD_COLOR)
+        plates = pd.start(fn)
         for plate in plates:
             cv2.drawContours(img, plate, -1, (255, 0, 255), 6 )
         cv2.namedWindow('squares', cv2.WINDOW_NORMAL)
         cv2.imshow('squares', img)
+
         ch = 0xFF & cv2.waitKey()
         if ch == 27:
             break
+
     cv2.destroyWindow('squares')
 
 if __name__ == '__main__':
