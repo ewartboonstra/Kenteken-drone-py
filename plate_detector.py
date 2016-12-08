@@ -4,7 +4,7 @@ from myMath import myMath
 
 class plate_detector:
 
-    def __find_contours(img, thresh):
+    def __find_contours(self, img, thresh):
         #1
         src = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
         # 2
@@ -24,7 +24,8 @@ class plate_detector:
 
         return conts, hierarchy
 
-    def __find_squares(conts):
+    def __find_squares(self, conts):
+        mm = myMath()
         squares = []
         current_index = 0
         for cnt in conts:
@@ -45,19 +46,22 @@ class plate_detector:
                 #2 is bottom
                 #3 is right
                 #4 is top
-                len1 = myMath.distance_between_points(cnt[0][0],cnt[1][0])
-                len2 = myMath.distance_between_points(cnt[1][0],cnt[2][0])
-                len3 = myMath.distance_between_points(cnt[2][0],cnt[3][0])
-                len4 = myMath.distance_between_points(cnt[3][0],cnt[1][0])
+                len1 = mm.distance_between_points(cnt[0][0],cnt[1][0])
+                len2 = mm.distance_between_points(cnt[1][0],cnt[2][0])
+                len3 = mm.distance_between_points(cnt[2][0],cnt[3][0])
+                len4 = mm.distance_between_points(cnt[3][0],cnt[1][0])
+                r = mm.ratio(len1, len2)
+                r2 = mm.ratio(len3, len4)
                 #check if ratio is licence plate like
-                if (myMath.ratio(len1, len2) > 3.0 and myMath.ratio(len1, len2) < 8.0) and (myMath.ratio(len3, len4) > 3.0 and ratio(myMath.len3, len4) < 8.0):
+                if (r > 3.0 and r < 8.0) and (r2 > 3.0 and r2 < 8.0):
                     square = current_index, cnt
                     squares.append(square)
             current_index = current_index + 1
         return squares
 
-    def __find_potential_plate(squares, hierarchy, conts):
+    def __find_potential_plates(self, squares, hierarchy, conts):
         recs = []
+        #TODO vincent: hierarchy is een first child representatie van contours, gebruik deze info om het te optimaliseren.
         for square in squares:
             j = 0
             for hier in hierarchy[0]:
@@ -69,10 +73,13 @@ class plate_detector:
                 j = j + 1
         return recs
 
-    def start(img):
+    def __find_plate(self, recs):
+        print 'oeps'
+
+    def start(self, img):
         plates = []
         for x in xrange(15, 240, 15):
-            conts, hierarchy = __find_contours(img, thresh)
-            squares = __find_squares(conts)
-            plates.append(__find_potential_plate(squares, hierarchy, conts))
+            conts, hierarchy = self.__find_contours(img, x)
+            squares = self.__find_squares(conts)
+            plates.append(self.__find_potential_plates(squares, hierarchy, conts))
         return plates

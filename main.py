@@ -104,7 +104,7 @@ def find_rectangle(img, thresh):
 def show_img():
     pd = plate_detector()
     from glob import glob
-    for fn in glob('/home/vincent/Documents/wh/jaar 3/deze drone is wel goed/img/*.JPG'):
+    for fn in glob('img/*.JPG'):
 
         plates = []
         '''start = time.time()
