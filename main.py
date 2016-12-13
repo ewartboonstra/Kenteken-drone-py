@@ -105,8 +105,6 @@ def show_img():
     pd = plate_detector()
     from glob import glob
     for fn in glob('img/*.JPG'):
-
-        plates = []
         '''start = time.time()
         for x in xrange(15, 240, 15):
 
@@ -114,13 +112,22 @@ def show_img():
         end = time.time()
         print end - start'''
         img = cv2.imread(fn, cv2.IMREAD_COLOR)
-        plates = pd.start(fn)
-        for plate in plates:
-            cv2.drawContours(img, plate, -1, (255, 0, 255), 6 )
-        cv2.namedWindow('squares', cv2.WINDOW_NORMAL)
-        cv2.imshow('squares', img)
+        plate, plates = pd.start(img)
+        # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
+        #debug
+        for platex in plates:
+            cv2.drawContours(img, platex, -1, (255, 0, 255), 6 )
+        cv2.namedWindow('original', cv2.WINDOW_NORMAL)
+        cv2.imshow('original', img)
+        print plate
+        if plate[2] > plate[0] and plate[3] > plate[1]:
+            crop_img = img[plate[1]:plate[3], plate[0]:plate[2]] # Crop from x, y, w, h -> 100, 200, 300, 400
+            cv2.namedWindow('cropped', cv2.WINDOW_NORMAL)
+            cv2.imshow('cropped', crop_img)
 
         ch = 0xFF & cv2.waitKey()
+
+        cv2.destroyWindow('cropped')
         if ch == 27:
             break
 

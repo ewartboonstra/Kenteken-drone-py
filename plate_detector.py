@@ -6,7 +6,7 @@ class plate_detector:
 
     def __find_contours(self, img, thresh):
         #1
-        src = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
+        src = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # 2
         src = cv2.GaussianBlur(src, (5, 5), 0)
         # Set threshold and maxValue
@@ -74,12 +74,58 @@ class plate_detector:
         return recs
 
     def __find_plate(self, recs):
-        print 'oeps'
+        maxX = 0
+        maxY = 0
+        minX = 400000
+        minY = 400000
+
+        for x in recs:
+            for rec in x:
+
+                if rec[0][0][0] > maxX:
+                    maxX = rec[0][0][0]
+                if rec[1][0][0] > maxX:
+                    maxX = rec[1][0][0]
+                if rec[2][0][0] > maxX:
+                    maxX = rec[2][0][0]
+                if rec[3][0][0] > maxX:
+                    maxX = rec[3][0][0]
+                if rec[0][0][1] > maxY:
+                    maxY = rec[0][0][1]
+                if rec[1][0][1] > maxY:
+                    maxY = rec[1][0][1]
+                if rec[2][0][1] > maxY:
+                    maxY = rec[2][0][1]
+                if rec[3][0][1] > maxY:
+                    maxY = rec[3][0][1]
+
+                if rec[0][0][0] < minX:
+                    minX = rec[0][0][0]
+                if rec[1][0][0] < minX:
+                    minX = rec[1][0][0]
+                if rec[2][0][0] < minX:
+                    minX = rec[2][0][0]
+                if rec[3][0][0] < minX:
+                    minX = rec[3][0][0]
+                if rec[0][0][1] < minY:
+                    minY = rec[0][0][1]
+                if rec[1][0][1] < minY:
+                    minY = rec[1][0][1]
+                if rec[2][0][1] < minY:
+                    minY = rec[2][0][1]
+                if rec[3][0][1] < minY:
+                    minY = rec[3][0][1]
+
+        result = [minX, minY, maxX, maxY]
+        return result
 
     def start(self, img):
         plates = []
         for x in xrange(15, 240, 15):
             conts, hierarchy = self.__find_contours(img, x)
             squares = self.__find_squares(conts)
-            plates.append(self.__find_potential_plates(squares, hierarchy, conts))
-        return plates
+            recs = self.__find_potential_plates(squares, hierarchy, conts)
+            if recs != []:
+                plates.append(recs)
+        plate_cords = self.__find_plate(plates)
+        return plate_cords, plates
