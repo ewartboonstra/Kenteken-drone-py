@@ -95,27 +95,65 @@ class plate_finder:
         #alle nummerborden zijn nu op locatie gesorteert, vergelijk nummerborden of ze erg op elkaar lijken en maak hier dan 1 nummerbord van
         #dmv de breete/hoogte van de hooste/breetste nummerbordt te nemen
         #[100,100][101,99][100,102][200,200][201,202] -> [101,102][201,202]
-        while i < len(plates):
-            if i+j < len(plates) and plates[i].is_alike(plates[i+j]):
-                if plates[i+j].maxX > top_left_x:
-                    top_left_x = plates[i+j].maxX
-                if plates[i+j].maxY > top_left_y:
-                    top_left_y = plates[i+j].maxY
-                if plates[i+j].width > width:
-                    width = plates[i+j].width
-                if plates[i+j].heigth > heigth:
-                    heigth = plates[i+j].heigth
+        while i < len(plates[0]):
+            print i
+            print j
+            while i+j < len(plates[0]) and plates[0][i].is_alike(plates[0][i+j]):
+                if plates[0][i+j].maxX > top_left_x:
+                    top_left_x = plates[0][i+j].maxX
+                if plates[0][i+j].maxY > top_left_y:
+                    top_left_y = plates[0][i+j].maxY
+                if plates[0][i+j].width > width:
+                    width = plates[0][i+j].width
+                if plates[0][i+j].heigth > heigth:
+                    heigth = plates[0][i+j].heigth
                 j = j + 1
-            else:
-                cords = [top_left_x, top_left_y, top_left_y+heigth, top_left_x+width]
-                sqaushed.append(cords)
-                top_left_x = 0
-                top_left_y = 0
-                width = 0
-                heigth = 0
-                i = i + j
-                j = 0
+            cords = [top_left_x, top_left_y, top_left_y+heigth, top_left_x+width]
+            sqaushed.append(cords)
+            top_left_x = 0
+            top_left_y = 0
+            width = 0
+            heigth = 0
+            i = i + j
+            j = 0
         return sqaushed
+
+    def angle_cos(self, p0, p1, p2):
+        d1, d2 = (p0-p1).astype('float'), (p2-p1).astype('float')
+        return abs( np.dot(d1, d2) / np.sqrt( np.dot(d1, d1)*np.dot(d2, d2) ) )
+
+    def plate_ratio(self, p0, p1, p2, p3):
+        len1 = abs(p0[0]-p3[0])
+        len2 = abs(p0[1]-p1[1])
+        return len1/len2
+
+    def find_squares(self, img):
+        img = cv2.GaussianBlur(img, (5, 5), 0)#blur the immage to reduse noice
+        squares = []
+        for gray in cv2.split(img):
+            bin = cv2.Canny(gray, 0, 50, apertureSize=5)#Find edges using the canny edge detector alghorim
+            bin = cv2.dilate(bin, None)#Dilation to "increase" the width of the edges for easier detection
+            for thrs in xrange(25, 255, 25):
+                retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)#Treshholding the image
+                bin, contours, hierarchy = cv2.findContours(bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)#finding contours
+                for index, cnt in enumerate(contours):
+                    cnt_len = cv2.arcLength(cnt, True)
+                    cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)#Simplefies contours using ramer douglas peucker algorithm
+                    if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):# check if the contour has 4 pints, the countour isnt so small its possibly noise, and see if the contour soesnt intersect with itself
+                        cnt = cnt.reshape(-1, 2)#tranfrom the shape of the array from [a][0]][x/y] to [a][x/y]
+                        max_cos = np.max([self.angle_cos( cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4] ) for i in xrange(4)]) #Calculate the angle of each corner
+                        if max_cos < 0.1: #if its smaller then 0.1 its around 90 degrees
+                            ratio = self.plate_ratio(cnt[0], cnt[1], cnt[2], cnt[3])
+                            if ratio > 3 and ratio < 8: #ratio between left and bottom edge of a eu licence plate is between 3 and 8
+                                child_count = 0
+                                for index2, hier in enumerate(hierarchy[0]):
+                                    if hier[3] == index and cv2.contourArea(contours[index2]) > 500:#find any childeren (possible letters) in a contour
+                                        child_count = child_count + 1
+                                if child_count > 0:
+                                    squares.append(cnt)
+
+        return squares
+
 
     def find_plate_coordinates(self, image):
         plates = []

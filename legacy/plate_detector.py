@@ -45,7 +45,7 @@ class plate_detector:
                 rectangles.append(a_rectangle)
 
         plate_like_rectangles = []
-        for rect in rectangles
+        for rect in rectangles:
             r = mm.ratio(get_side_1, get_side_2)
             r2 = mm.ratio(get_side_3, get_side_4)
             #check if ratio is licence plate like
