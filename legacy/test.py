@@ -46,6 +46,7 @@ if __name__ == '__main__':
     for fn in glob('/home/vincent/Documents/wh/jaar 3/drone/img/*.png'):
         img = cv2.imread(fn)
         squares = find_squares(img)
+        print squares
         cv2.drawContours( img, squares, -1, (0, 255, 0), 3 )
         cv2.imshow('squares', img)
         ch = 0xFF & cv2.waitKey()
