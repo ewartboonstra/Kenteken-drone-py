@@ -118,40 +118,53 @@ class plate_finder:
             j = 0
         return sqaushed
 
+    #bereken cosinus van 3 punten
     def angle_cos(self, p0, p1, p2):
         d1, d2 = (p0-p1).astype('float'), (p2-p1).astype('float')
         return abs( np.dot(d1, d2) / np.sqrt( np.dot(d1, d1)*np.dot(d2, d2) ) )
 
+    #bereken de ratio tussen de lengte en de breete van 4 punten
     def plate_ratio(self, p0, p1, p2, p3):
         len1 = abs(p0[0]-p3[0])
         len2 = abs(p0[1]-p1[1])
         return len1/len2
 
+    #TODO: Deze code moet nu nog OOP
+    #find_squares neemt een opencv image (imread) als argument
+    #Op deze image worden verschillende transformatie toegepast om hier makkelijker contouren uit te halen.
+    #Deze contouren worden versimpelt en alle contouren met 4 hoeken van ongeveeer 90 graden en een Lengte:Breete ratio van 1:8
+    #Van deze contouren word gekeken of deze child contours heeft
+    #er wordt een lijst terug gegeven met alle contouren die aan deze eisen voldoet.
     def find_squares(self, img):
-        img = cv2.GaussianBlur(img, (5, 5), 0)#blur the immage to reduse noice
         squares = []
-        for gray in cv2.split(img):
-            bin = cv2.Canny(gray, 0, 50, apertureSize=5)#Find edges using the canny edge detector alghorim
-            bin = cv2.dilate(bin, None)#Dilation to "increase" the width of the edges for easier detection
-            for thrs in xrange(25, 255, 25):
-                retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)#Treshholding the image
-                bin, contours, hierarchy = cv2.findContours(bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)#finding contours
-                for index, cnt in enumerate(contours):
-                    cnt_len = cv2.arcLength(cnt, True)
-                    cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)#Simplefies contours using ramer douglas peucker algorithm
-                    if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):# check if the contour has 4 pints, the countour isnt so small its possibly noise, and see if the contour soesnt intersect with itself
-                        cnt = cnt.reshape(-1, 2)#tranfrom the shape of the array from [a][0]][x/y] to [a][x/y]
-                        max_cos = np.max([self.angle_cos( cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4] ) for i in xrange(4)]) #Calculate the angle of each corner
-                        if max_cos < 0.1: #if its smaller then 0.1 its around 90 degrees
-                            ratio = self.plate_ratio(cnt[0], cnt[1], cnt[2], cnt[3])
-                            if ratio > 3 and ratio < 8: #ratio between left and bottom edge of a eu licence plate is between 3 and 8
-                                child_count = 0
-                                for index2, hier in enumerate(hierarchy[0]):
-                                    if hier[3] == index and cv2.contourArea(contours[index2]) > 500:#find any childeren (possible letters) in a contour
-                                        child_count = child_count + 1
-                                if child_count > 0:
-                                    squares.append(cnt)
-
+        #pre prossing
+        img = cv2.GaussianBlur(img, (5, 5), 0)#blur the immage to reduse noice
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        bin = cv2.Canny(gray, 0, 50, apertureSize=5)#Find edges using the canny edge detector alghorim
+        bin = cv2.dilate(bin, None)#Dilation to "increase" the width of the edges for easier detection
+        ''' '''
+        for thrs in xrange(25, 255, 25):
+            retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)#Treshholding the image
+            bin, contours, hierarchy = cv2.findContours(bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)#finding contours and thier hierarchy in a tree structure
+            for index, cnt in enumerate(contours):
+                cnt_len = cv2.arcLength(cnt, True)
+                cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)#Simplefies contours using ramer douglas peucker algorithm
+                ''' '''
+                if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):# check if the contour has 4 pints, the countour isnt so small its possibly noise, and see if the contour soesnt intersect with itself
+                    cnt = cnt.reshape(-1, 2)#tranfrom the shape of the array from [a][0]][x/y] to [a][x/y]
+                    max_cos = np.max([self.angle_cos( cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4] ) for i in xrange(4)]) #Calculate the angle of each corner
+                    if max_cos < 0.1: #if its smaller then 0.1 its around 90 degrees
+                        ratio = self.plate_ratio(cnt[0], cnt[1], cnt[2], cnt[3])
+                        if ratio > 3 and ratio < 8: #ratio between left and bottom edge of a eu licence plate is between 3 and 8
+                            ''' '''
+                            child_count = 0
+                            for index2, hier in enumerate(hierarchy[0]):
+                                if hier[3] == index and cv2.contourArea(contours[index2]) > 500:#find any childeren (possible letters) in a contour
+                                    child_count = child_count + 1
+                            if child_count > 0:
+                                squares.append(cnt)
+            if len(squares) > 0:
+                break
         return squares
 
 
