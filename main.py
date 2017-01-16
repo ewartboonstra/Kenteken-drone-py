@@ -1,4 +1,6 @@
+from jsondata import Json
 from plate_finder import plate_finder
+import server
 import cv2
 
 if __name__ == '__main__':
@@ -17,6 +19,16 @@ if __name__ == '__main__':
             cv2.namedWindow(fn, cv2.WINDOW_NORMAL)
             cv2.imshow(fn, crop_img)
             ch = 0xFF & cv2.waitKey()
+
+            #send image to server
+            json = Json()
+            jsonData = json.convertToJson(crop_img)
+
+            server = server.Server()
+            server.openConnection()
+            server.sendJsonData(jsonData)
+            server.closeConnection()
+            
             if ch == 27:
                 break
     cv2.destroyAllWindows()
