@@ -1,3 +1,5 @@
+import base64
+
 from jsondata import Json
 from plate_finder import plate_finder
 import server
@@ -14,21 +16,25 @@ if __name__ == '__main__':
             print cord
             bounding  = cv2.boundingRect(cord)
             print bounding
-            crop_img = img[bounding[1]:bounding[1]+bounding[3], bounding[0]:bounding[0]+bounding[2]]# Crop from x, y, w, h -> 100, 200, 300, 400
+            crop_img = img[bounding[1]:bounding[1]+bounding[3], bounding[0]:bounding[0]+bounding[2]]  # Crop from x, y, w, h -> 100, 200, 300, 400
             # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
             cv2.namedWindow(fn, cv2.WINDOW_NORMAL)
             cv2.imshow(fn, crop_img)
-            ch = 0xFF & cv2.waitKey()
 
             #send image to server
-            json = Json()
-            jsonData = json.convertToJson(crop_img)
+            # test code
+            jsonData = base64.b64encode(crop_img)
 
-            server = server.Server()
-            server.openConnection()
-            server.sendJsonData(jsonData)
-            server.closeConnection()
-            
+            # echte code
+            # json = Json()
+            # jsonData = json.convertToJson(crop_img)
+
+            # server = server.Server()
+            # server.openConnection()
+            # server.sendJsonData(jsonData)
+            # server.closeConnection()
+
+            ch = 0xFF & cv2.waitKey()
             if ch == 27:
                 break
     cv2.destroyAllWindows()
