@@ -22,10 +22,11 @@ class Json(object):
             string = base64.b64encode(imageFile.read())
             return string
 
-    def convertToJson(self, imagePath):
+    def convertToJson(self):
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime(self.dateTimeNotation)  # maakt een timestamp
-        base64string = base64.b64encode(imagePath)
+        # base64string = base64.b64encode(imagePath)
+        base64string = base64.b64encode(open("tmp_crop.png", "rb").read())
         pythonDictionary = {}  # dictionary aanmaken waar de data hieronder aan wordt toegevoegd.
         pythonDictionary['Picture'] = base64string
         pythonDictionary['Gps'] = "N 50.91721° E 5.91775°"  # dummydata
