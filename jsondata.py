@@ -25,7 +25,7 @@ class Json(object):
     def convertToJson(self, imagePath):
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime(self.dateTimeNotation)  # maakt een timestamp
-        base64string = self.convertToBase64(imagePath)
+        base64string = base64.b64encode(imagePath)
         pythonDictionary = {}  # dictionary aanmaken waar de data hieronder aan wordt toegevoegd.
         pythonDictionary['Picture'] = base64string
         pythonDictionary['Gps'] = "N 50.91721° E 5.91775°"  # dummydata

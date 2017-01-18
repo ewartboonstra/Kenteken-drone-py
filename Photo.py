@@ -18,14 +18,14 @@ class Photo:
         else:
             print "class already exists"
 
-    def shootPhoto(self):
+    def __shootPhoto(self):
         photoUrl = "http://10.5.5.9/gp/gpControl/command/shutter?p=1"
         print "Waiting for wifi connection."
         urllib2.urlopen(photoUrl)
         print "photo taken"
         time.sleep(1.5)  # 1.5 second interval to make sure photo saves
 
-    def getPhotoUrl(self):
+    def __getPhotoUrl(self):
         # save photo
         url = "http://10.5.5.9/gp/gpMediaList/"
         response = urllib2.urlopen(url)
@@ -40,7 +40,7 @@ class Photo:
 
     # METHOD #1: OpenCV, NumPy, and urllib
 
-    def url_to_image(self, url):
+    def __url_to_image(self, url):
         # it into OpenCV format
         resp = urllib2.urlopen(url)
         image = np.asarray(bytearray(resp.read()), dtype="uint8")
@@ -53,7 +53,7 @@ class Photo:
         # Hiervoor moet je verbonden zijn met de gopro wifinetwerk
     def takePhoto(self):
         photo = Photo()
-        photo.shootPhoto()
-        path = photo.getPhotoUrl()
+        photo.__shootPhoto()
+        path = photo.__getPhotoUrl()
         print "Image made"
-        return photo.url_to_image(path)
+        return photo.__url_to_image(path)
