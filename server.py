@@ -38,9 +38,8 @@ class Server:
         print "Connection closed"
 
     # Send image of kenteken to c# server
-    def sendImg(self, img):
+    def sendJsonData(self, json):
         # debug image
         # img = cv2.imread('img/kenteken-apart.png')
-        b64 = self.convertToBase64(img)
-        self.socket.send_string(b64)
+        self.socket.send_string(json)
         print "Image sent"
