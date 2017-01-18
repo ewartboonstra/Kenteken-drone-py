@@ -1,0 +1,65 @@
+import base64
+
+from Photo import Photo
+from jsondata import Json
+from plate_finder import plate_finder
+import cv2
+from server import Server
+
+if __name__ == '__main__':
+    plate_finder = plate_finder()
+    foto = Photo()
+    go = True
+    server = Server()
+    server.openConnection()
+    while go:
+        try:
+            img = foto.takePhoto()
+        except:
+            print "no conection"
+            img = cv2.imread('img/stupidtest.JPG', cv2.IMREAD_COLOR)
+
+        '''from glob import glob
+        for fn in glob('img/*.JPG'):'''
+
+        # img = cv2.imread(fn, cv2.IMREAD_COLOR)
+        cords = plate_finder.find_squares(img)
+        # for debugging purposes to c the imiage during run time
+        '''cv2.namedWindow('full img', cv2.WINDOW_NORMAL)
+        cv2.imshow('full img', img)
+        ch = 0xFF & cv2.waitKey()'''
+        if len(cords) == 0:
+            print "no plate found"
+        for cord in cords:
+            print cord
+            bounding = cv2.boundingRect(cord)
+            print bounding
+            crop_img = img[bounding[1]:bounding[1] + bounding[3],
+                       bounding[0]:bounding[0] + bounding[2]]  # Crop from x, y, w, h -> 100, 200, 300, 400
+            # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
+
+            # for debugging purposes to c the imiage during run time
+            # cv2.namedWindow('crop', cv2.WINDOW_NORMAL)
+            # cv2.imshow('crop', crop_img)
+
+            cv2.imwrite("tmp_crop.png", crop_img)
+
+            cropped_img = cv2.imread("crop_image.png", cv2.IMREAD_COLOR)
+            # send image to server
+            # test code
+            # jsonData = base64.b64encode(cropped_img)
+            # echte code
+            json = Json()
+            jsonData = json.convertToJson()
+
+            server.sendJsonData(jsonData)
+
+            '''ch = 0xFF & cv2.waitKey()
+            if ch == 27:
+                break
+            cv2.destroyAllWindows()'''
+            # print cords
+        '''ch = 0xFF & cv2.waitKey()
+        if ch == 27:
+            go = False
+        cv2.destroyAllWindows()'''
