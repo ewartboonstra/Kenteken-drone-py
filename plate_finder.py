@@ -62,7 +62,7 @@ class plate_finder:
             for child in plate.childeren:
             #contourArea berekent het oppervlakte, deze moet groeter dan 1000 om mogelijke ruis er uit te filteren
             #TODO maak van het filteren van ruis een functie
-                if cv2.contourArea(contours[child].points) > 1000:
+                if cv2.contourArea(contours[child].points) > 500:
                     is_plate = True
             if is_plate:
                 plates.append(plate)
@@ -153,7 +153,7 @@ class plate_finder:
                 if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):# check if the contour has 4 pints, the countour isnt so small its possibly noise, and see if the contour soesnt intersect with itself
                     cnt = cnt.reshape(-1, 2)#tranfrom the shape of the array from [a][0]][x/y] to [a][x/y]
                     max_cos = np.max([self.angle_cos( cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4] ) for i in xrange(4)]) #Calculate the angle of each corner
-                    if max_cos < 0.1: #if its smaller then 0.1 its around 90 degrees
+                    if max_cos < 0.5: #if its smaller then 0.1 its around 90 degrees
                         ratio = self.plate_ratio(cnt[0], cnt[1], cnt[2], cnt[3])
                         if ratio > 3 and ratio < 8: #ratio between left and bottom edge of a eu licence plate is between 3 and 8
                             ''' '''
