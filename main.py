@@ -11,7 +11,6 @@ if __name__ == '__main__':
     for fn in glob('img/*.JPG'):
         img = cv2.imread(fn, cv2.IMREAD_COLOR)
         cords = plate_finder.find_squares(img)
-        cv2.drawContours( img, cords, -1, (0, 255, 0), 3 )
         for cord in cords:
             print cord
             bounding  = cv2.boundingRect(cord)
@@ -20,11 +19,14 @@ if __name__ == '__main__':
             # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
             cv2.namedWindow(fn, cv2.WINDOW_NORMAL)
             cv2.imshow(fn, crop_img)
+            cv2.imwrite("tmp_crop.png", crop_img)
 
+            cropped_img = cv2.imread("tmp_crop.png", cv2.IMREAD_COLOR)
+            '''buf = cv2.imencode(".png", crop_img)
+            debuf = cv2.imdecode(buf, cv2.IMREAD_COLOR)'''
             #send image to server
             # test code
-            jsonData = base64.b64encode(crop_img)
-
+            jsonData = base64.b64encode(cropped_img)
             # echte code
             # json = Json()
             # jsonData = json.convertToJson(crop_img)
